@@ -1,0 +1,38 @@
+# Python virtual environments
+.venv/
+.venv*/
+**/__pycache__/
+*.py[cod]
+
+# Large Model Checkpoints and Weights
+models/
+**/models/
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.onnx
+*.engine
+
+# TensorRT-Edge-LLM and build artifacts
+cosmos3-edge/work/
+cosmos3-edge/.cupy-cache/
+cosmos3-edge/kernel-build-deps/
+**/build/
+*.cubin
+*.so
+*.o
+*.a
+
+# Cloned upstream sub-repositories (tracked via patches in /patches)
+cosmos3-edge/TensorRT-Edge-LLM/
+cosmos3-edge/live-vlm-webui/
+
+# Temporary / Lock files
+.~lock.*
+*.lock
+*.log
+
+# IDE & Editor files
+.vscode/
+.idea/

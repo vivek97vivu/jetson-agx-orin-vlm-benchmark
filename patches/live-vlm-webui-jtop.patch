@@ -1,0 +1,36 @@
+diff --git a/src/live_vlm_webui/gpu_monitor.py b/src/live_vlm_webui/gpu_monitor.py
+index a802f67..ea9286f 100644
+--- a/src/live_vlm_webui/gpu_monitor.py
++++ b/src/live_vlm_webui/gpu_monitor.py
+@@ -1140,9 +1140,11 @@ class JetsonOrinMonitor(GPUMonitor):
+                 # Orin uses unified memory, RAM is shared with GPU
+                 # jtop returns memory in KB, convert to GB (divide by 1024^2)
+                 # Handle different memory structure formats
+-                if isinstance(memory, dict):
++                # jtop 4+ exposes memory as a GenericInterface (mapping-like),
++                # not a plain dict. It still provides .get() and .keys().
++                if isinstance(memory, dict) or hasattr(memory, "get"):
+                     ram_info = memory.get("RAM", {})
+-                    if isinstance(ram_info, dict):
++                    if isinstance(ram_info, dict) or hasattr(ram_info, "get"):
+                         vram_used_kb = ram_info.get("used", 0) or ram_info.get("use", 0) or 0
+                         vram_total_kb = (
+                             ram_info.get("tot", 0)
+@@ -1171,7 +1173,7 @@ class JetsonOrinMonitor(GPUMonitor):
+                 # Log warning if we're getting zeros (helps debug)
+                 if vram_total_gb == 0 and not hasattr(self, "_vram_warning_logged"):
+                     logger.warning(
+-                        f"VRAM total is 0 - jtop memory structure: {type(memory)}, keys: {list(memory.keys()) if isinstance(memory, dict) else 'N/A'}"
++                        f"VRAM total is 0 - jtop memory structure: {type(memory)}, keys: {list(memory.keys()) if hasattr(memory, 'keys') else 'N/A'}"
+                     )
+                     self._vram_warning_logged = True
+ 
+@@ -1266,7 +1268,7 @@ class JetsonOrinMonitor(GPUMonitor):
+                     vram_total_gb == 0
+                     or gpu_percent == 0
+                     or not isinstance(self.jtop_instance.stats, dict)
+-                    or not isinstance(memory, dict)
++                    or not hasattr(memory, "get")
+                 ):
+                     logger.warning(
+                         f"jtop returned zeros or invalid data (GPU={gpu_percent}%, VRAM={vram_total_gb}GB), trying nvidia-smi fallback"

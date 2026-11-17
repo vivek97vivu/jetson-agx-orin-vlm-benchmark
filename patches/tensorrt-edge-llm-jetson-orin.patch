@@ -1,0 +1,45 @@
+diff --git a/cpp/kernels/moe/f16_cutedsl/cuteDslF16MoeRunner.h b/cpp/kernels/moe/f16_cutedsl/cuteDslF16MoeRunner.h
+index 123d793..b5e5ac1 100644
+--- a/cpp/kernels/moe/f16_cutedsl/cuteDslF16MoeRunner.h
++++ b/cpp/kernels/moe/f16_cutedsl/cuteDslF16MoeRunner.h
+@@ -19,6 +19,19 @@
+ 
+ #if defined(CUTE_DSL_F16_MOE_ENABLED)
+ 
++#include <cuda.h>
++#if defined(TRT_EDGELLM_CUDA_LIBRARY_T_COMPAT)
++#include <cuda_runtime.h>
++#if CUDA_VERSION >= 12000 && CUDA_VERSION < 12080
++typedef CUlibrary cudaLibrary_t;
++static inline cudaError_t cudaLibraryUnload(cudaLibrary_t lib)
++{
++    CUresult r = cuLibraryUnload(lib);
++    return static_cast<cudaError_t>(r);
++}
++#endif // CUDA_VERSION >= 12000 && CUDA_VERSION < 12080
++#endif // TRT_EDGELLM_CUDA_LIBRARY_T_COMPAT
++
+ #include "kernels/cuteDslModuleLoader.h"
+ 
+ #if defined(CUTE_DSL_CUDA_ERROR_CHECK)
+diff --git a/kernelSrcs/gemm_cutedsl/gemm_ampere_streamk.py b/kernelSrcs/gemm_cutedsl/gemm_ampere_streamk.py
+index eee9070..e1c7377 100644
+--- a/kernelSrcs/gemm_cutedsl/gemm_ampere_streamk.py
++++ b/kernelSrcs/gemm_cutedsl/gemm_ampere_streamk.py
+@@ -399,8 +399,14 @@ def run(mnk=(1, 2048, 2048), split_k=4, cta_tiler_mnk=(16, 128, 128),
+     _tag = f"[{file_name}]"
+     print(f"{_tag} Split-K GEMM: M={M}, N={N}, K={K}, split_k={split_k}")
+ 
+-    a_cp = cp.random.uniform(-1, 1, (M, K)).astype(cp.float16)
+-    b_cp = cp.random.uniform(-1, 1, (N, K)).astype(cp.float16)
++    # Export-only builds need shape-correct buffers for compilation but do not
++    # execute the kernel, so avoid initializing CURAND on Jetson during AOT.
++    if export_only:
++        a_cp = cp.empty((M, K), dtype=cp.float16)
++        b_cp = cp.empty((N, K), dtype=cp.float16)
++    else:
++        a_cp = cp.random.uniform(-1, 1, (M, K)).astype(cp.float16)
++        b_cp = cp.random.uniform(-1, 1, (N, K)).astype(cp.float16)
+     # Workspace: each split needs ceil(M, bM) rows, not just M rows.
+     padded_m = ((M + cta_tiler_mnk[0] - 1) // cta_tiler_mnk[0]) * cta_tiler_mnk[0]
+     c_ws = cp.zeros((split_k * padded_m, N), dtype=cp.float16)
