@@ -1,6 +1,6 @@
-# 🚀 NVIDIA Jetson AGX Orin — Vision-Language Model (VLM) Benchmark
-
 <div align="center">
+
+<h1 align="center">🚀 NVIDIA Jetson AGX Orin — Vision-Language Model (VLM) Benchmark</h1>
 
 [![Hardware: Jetson AGX Orin 64GB](https://img.shields.io/badge/Hardware-NVIDIA_Jetson_AGX_Orin_64GB-76B900?logo=nvidia&style=for-the-badge)](https://www.nvidia.com/en-us/autonomous-machines/embedded-systems/jetson-orin/)
 [![Power Mode: MODE_50W](https://img.shields.io/badge/Power_Mode-MODE__50W-007acc?style=for-the-badge)](#-hardware--system-specification)
